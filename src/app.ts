@@ -31,6 +31,7 @@ router.use((req, res, next) => {
   next(new NotFoundError('Страница не найдена'));
 });
 
+// тут перехватываем ошибки, которые нигде не обработались
 app.use((
   err: ServerError | Error,
   req: unknown,
@@ -39,6 +40,7 @@ app.use((
   next: NextFunction,
 ) => {
   const isCustomError = err instanceof ServerError;
+  // если ошибка не опознана, отправляем кастомную пятисотую
   if (!isCustomError) {
     const customError = new ServerError();
     res
