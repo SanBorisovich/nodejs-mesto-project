@@ -1,7 +1,10 @@
-export const badReqCreateUserMessage = 'Неверные параметры создания пользователя';
-export const notFoundUserMessage = 'Пользователь с таким id не существует';
-export const badReqUserMessage = 'Неверные параметры пользователя';
-export const badReqAvatarEditMessage = 'Неверные параметры аватара профиля';
+import { celebrate, Joi } from 'celebrate';
 
-export const badReqCardMessage = 'Неверные параметры создания карточки';
+export const notFoundUserMessage = 'Пользователь с таким id не существует';
 export const notFoundCardMessage = 'Карточка с таким id не существует';
+
+export const idValidationRules = celebrate({
+  params: Joi.object().keys({
+    id: Joi.string().length(24).hex().required(),
+  }),
+});

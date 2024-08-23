@@ -1,60 +1,29 @@
-import express, { Response, Request, NextFunction } from 'express';
+import express from 'express';
 import mongoose from 'mongoose';
-import path from 'path';
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import 'dotenv/config';
 
-import { NotFoundError, ServerError } from './errors';
-
-import { AuthContext } from './types';
 import router from './routes';
+import {
+  errorMiddleware,
+  errorLoggerMiddleware,
+  requestLoggerMiddleware,
+} from './middlewares';
 
 const { PORT = 3000, MONGO_URL = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
 
 const app = express();
-
+app.use(cors());
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.use((req: Request, res: Response<unknown, AuthContext>, next: NextFunction) => {
-  res.locals.user = {
-    _id: '66c20693756ab4c7b1a52ddc',
-  };
-
-  next();
-});
-
+app.use(requestLoggerMiddleware);
 app.use('/', router);
 
-app.use(express.static(path.join(__dirname, 'public')));
-
-router.use((req, res, next) => {
-  next(new NotFoundError('Страница не найдена'));
-});
-
+app.use(errorLoggerMiddleware);
 // тут перехватываем ошибки, которые нигде не обработались
-app.use((
-  err: ServerError | Error,
-  req: unknown,
-  res: Response,
-  // eslint-disable-next-line no-unused-vars,@typescript-eslint/no-unused-vars
-  next: NextFunction,
-) => {
-  const isCustomError = err instanceof ServerError;
-  // если ошибка не опознана, отправляем кастомную пятисотую
-  if (!isCustomError) {
-    const customError = new ServerError();
-    res
-      .status(customError.statusCode)
-      .send(customError.resObj);
-  } else {
-    res
-      .status(err.statusCode)
-      .send({
-        statusCode: err.statusCode,
-        message: err.message,
-      });
-  }
-});
+app.use(errorMiddleware);
 
 const connect = async () => {
   try {
